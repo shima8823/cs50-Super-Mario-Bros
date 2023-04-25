@@ -2,7 +2,7 @@
 
 It is built using the love2d framework.
 
-Five functions were added to base the cs50 code.
+Four functions were added to base the cs50 code.
 
 - []  Program it such that when the player is dropped into the level, they’re always done so above solid ground.
 - []  In LevelMaker.lua, generate a random-colored key and lock block.
