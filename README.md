@@ -4,7 +4,7 @@ It is built using the love2d framework.
 
 Four functions were added to base the cs50 code.
 
-- []  Program it such that when the player is dropped into the level, they’re always done so above solid ground.
+- [x]  Program it such that when the player is dropped into the level, they’re always done so above solid ground.
 - []  In LevelMaker.lua, generate a random-colored key and lock block.
        The key should unlock the block when the player collides with it, triggering the block to disappear.
 - []  Once the lock has disappeared, trigger a goal post to spawn at the end of the level. 
