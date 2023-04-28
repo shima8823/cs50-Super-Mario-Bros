@@ -10,6 +10,16 @@
 
 LevelMaker = Class{}
 
+-- function When you reach the goal
+function LevelMaker.goal(player, width)
+    gStateMachine:change('play', {
+        score = player.score,
+        width = width + 10,
+        player = player
+    })
+end
+
+
 function LevelMaker.generate(width, height)
     local tiles = {}
     local entities = {}
@@ -21,6 +31,11 @@ function LevelMaker.generate(width, height)
     local topper = true
     local tileset = math.random(20)
     local topperset = math.random(20)
+
+    local keyPosition = math.random(width)
+    local lockPosition = math.random(width)
+    local keySkin = math.random(4)
+    local polePosition = width - 3
 
     -- insert blank tables into tiles for later access
     for x = 1, height do
@@ -38,7 +53,8 @@ function LevelMaker.generate(width, height)
         end
 
         -- chance to just be emptiness
-        if not (x == 1) and math.random(7) == 1 then
+        if not (x == 1) and not (x == keyPosition) and not (x == lockPosition) and not (x == polePosition)
+           and math.random(7) == 1 then
             for y = 7, height do
                 table.insert(tiles[y],
                     Tile(x, y, tileID, nil, tileset, topperset))
@@ -55,7 +71,7 @@ function LevelMaker.generate(width, height)
             end
 
             -- chance to generate a pillar
-            if math.random(8) == 1 then
+            if not (x == polePosition) and math.random(8) == 1 then
                 blockHeight = 2
                 
                 -- chance to generate bush on pillar
@@ -96,7 +112,7 @@ function LevelMaker.generate(width, height)
             end
 
             -- chance to spawn a block
-            if math.random(10) == 1 then
+            if not (x == lockPosition) and not (x == polePosition) and math.random(10) == 1 then
                 table.insert(objects,
 
                     -- jump block
@@ -154,6 +170,87 @@ function LevelMaker.generate(width, height)
                             end
 
                             gSounds['empty-block']:play()
+                        end
+                    }
+                )
+            end
+
+            if x == keyPosition then
+                table.insert(objects,
+                    GameObject {
+                        texture = 'keys-and-locks',
+                        x = (x - 1) * TILE_SIZE,
+                        y = (blockHeight) * TILE_SIZE,
+                        width = 16,
+                        height = 16,
+                        frame = keySkin,
+                        collidable = false,
+                        consumable = true,
+                        onConsume = function(player)
+                            gSounds['pickup']:play()
+                            player.hasKey = true
+                        end
+                    }
+                )
+            end
+
+            if x == lockPosition then
+                table.insert(objects,
+                    GameObject {
+                        texture = 'keys-and-locks',
+                        x = (x - 1) * TILE_SIZE,
+                        y = (blockHeight - 1) * TILE_SIZE,
+                        width = 16,
+                        height = 16,
+                        frame = 4 + keySkin,
+                        collidable = true,
+                        -- hit = false,
+                        solid = true,
+
+                        onCollide = function(object, index, player)
+                            if player.hasKey then
+                                gSounds['pickup']:play()
+                                player.hasKey = false
+                                table.remove(objects, index)
+                                -- spawn pole
+                                table.insert(objects,
+                                    GameObject {
+                                        texture = 'poles',
+                                        x = (polePosition - 1) * TILE_SIZE,
+                                        y = (4 - 1) * TILE_SIZE,
+                                        width = 16,
+                                        height = 48,
+                                        frame = keySkin,
+                                        collidable = true,
+                                        consumable = true,
+                                        solid = false,
+
+                                        onConsume = function(player)
+                                            LevelMaker.goal(player, width)
+                                        end
+                                    }
+                                )
+                                -- spawn flag
+                                table.insert(objects,
+                                    GameObject {
+                                        texture = 'flags',
+                                        x = polePosition * TILE_SIZE - 6,
+                                        y = (4 - 1) * TILE_SIZE,
+                                        width = 16,
+                                        height = 16,
+                                        -- 1 - 1, 2 - 4, 3 - 7, 4 - 10
+                                        frame = (keySkin - 1) * 3 + 1,
+                                        collidable = true,
+                                        consumable = true,
+                                        solid = false,
+                                        onConsume = function(player)
+                                            LevelMaker.goal(player, width)
+                                        end
+                                    }
+                                )
+                            else
+                                gSounds['empty-block']:play()
+                            end
                         end
                     }
                 )
